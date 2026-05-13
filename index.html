@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SarabComics</title>
+<style>
+body{margin:0;font-family:Arial;background:#0f0f0f;color:white;}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#151515;position:sticky;top:0}
+.logo{color:#00d0ff;font-size:22px;font-weight:bold}
+nav button{background:none;border:none;color:white;margin:0 5px;cursor:pointer}
+.icon{background:#222;border:none;color:white;width:38px;height:38px;border-radius:50%;cursor:pointer;margin-left:5px}
+.page{display:none;padding:20px}
+.active{display:block}
+.card{background:#1b1b1b;padding:10px;border-radius:12px;margin:10px 0}
+button{cursor:pointer}
+input,textarea{width:100%;padding:8px;margin:5px 0;background:#222;border:none;color:white;border-radius:8px}
+.small{font-size:12px;color:#aaa}
+</style>
+</head>
+<body>
+
+<!-- HUMAN CHECK -->
+<div id="human" class="page active">
+<h2>تحقق أنك إنسان 🤖</h2>
+<button onclick="enterSite()">أنا إنسان</button>
+<button onclick="enterSite(true)">تخطي</button>
+</div>
+
+<!-- AUTH -->
+<div id="auth" class="page">
+<h2>تسجيل / إنشاء حساب</h2>
+<input id="user" placeholder="اسم المستخدم" />
+<input id="pass" type="password" placeholder="كلمة المرور" />
+<button onclick="signup()">إنشاء حساب</button>
+<button onclick="login()">تسجيل دخول</button>
+<p class="small" id="msg"></p>
+</div>
+
+<!-- APP -->
+<div id="app">
+<header>
+<div class="logo">SarabComics</div>
+<div>
+<button class="icon" onclick="show('profile')">👤</button>
+<button class="icon" onclick="show('favorites')">❤</button>
+</div>
+</header>
+
+<nav>
+<button onclick="show('home')">الرئيسية</button>
+<button onclick="show('latest')">الأحدث</button>
+<button onclick="show('dc')">DC</button>
+<button onclick="show('marvel')">MARVEL</button>
+</nav>
+
+<div id="home" class="page active">
+<h3>الرئيسية</h3>
+<div class="card">
+<h4>Batman</h4>
+<button onclick="like('Batman')">إعجاب ❤</button>
+</div>
+</div>
+
+<div id="latest" class="page">
+<h3>الأحدث</h3>
+<div class="card">
+<h4>Nightwing</h4>
+<button onclick="like('Nightwing')">إعجاب ❤</button>
+</div>
+</div>
+
+<div id="dc" class="page">
+<h3>DC</h3>
+<div class="card">
+<h4>Superman</h4>
+<button onclick="like('Superman')">إعجاب ❤</button>
+</div>
+</div>
+
+<div id="marvel" class="page">
+<h3>Marvel</h3>
+<div class="card">
+<h4>Spider-Man</h4>
+<button onclick="like('Spider-Man')">إعجاب ❤</button>
+</div>
+</div>
+
+<div id="favorites" class="page">
+<h3>المفضلة</h3>
+<div id="favList"></div>
+</div>
+
+<div id="profile" class="page">
+<h3>الملف الشخصي</h3>
+<input id="pname" placeholder="الاسم" />
+<input id="pimg" placeholder="رابط الصورة" />
+<textarea id="pbio" placeholder="وصف"></textarea>
+<button onclick="saveProfile()">حفظ</button>
+<div id="pview"></div>
+</div>
+
+</div>
+
+<script>
+let currentUser = localStorage.getItem('currentUser');
+let users = JSON.parse(localStorage.getItem('users') || '{}');
+
+function enterSite(skip){
+if(!skip){
+document.getElementById('human').classList.remove('active');
+document.getElementById('auth').classList.add('active');
+}else{
+openApp();
+}
+}
+
+function signup(){
+let u=document.getElementById('user').value;
+let p=document.getElementById('pass').value;
+if(!u||!p)return;
+users[u]={pass:p,fav:[],profile:{name:u,img:'',bio:''}};
+localStorage.setItem('users',JSON.stringify(users));
+msg('تم إنشاء الحساب');
+}
+
+function login(){
+let u=document.getElementById('user').value;
+let p=document.getElementById('pass').value;
+if(users[u] && users[u].pass===p){
+currentUser=u;
+localStorage.setItem('currentUser',u);
+openApp();
+}else msg('خطأ');
+}
+
+function openApp(){
+document.getElementById('human').style.display='none';
+document.getElementById('auth').style.display='none';
+document.getElementById('app').style.display='block';
+}
+
+function show(id){
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+if(id==='favorites')loadFav();
+if(id==='profile')loadProfile();
+}
+
+function like(c){
+if(!currentUser){alert('لازم حساب');return;}
+users[currentUser].fav.push(c);
+localStorage.setItem('users',JSON.stringify(users));
+alert('تمت الإضافة');
+}
+
+function loadFav(){
+let box=document.getElementById('favList');
+box.innerHTML='';
+(users[currentUser].fav||[]).forEach(f=>box.innerHTML+=`<div class='card'>${f}</div>`);
+}
+
+function loadProfile(){
+let p=users[currentUser].profile;
+document.getElementById('pname').value=p.name;
+document.getElementById('pimg').value=p.img;
+document.getElementById('pbio').value=p.bio;
+document.getElementById('pview').innerHTML=`<div class='card'><img src='${p.img}' width='80'/><h4>${p.name}</h4><p>${p.bio}</p></div>`;
+}
+
+function saveProfile(){
+users[currentUser].profile={
+name:document.getElementById('pname').value,
+img:document.getElementById('pimg').value,
+bio:document.getElementById('pbio').value
+};
+localStorage.setItem('users',JSON.stringify(users));
+alert('تم الحفظ');
+loadProfile();
+}
+
+function msg(t){document.getElementById('msg').innerText=t;}
+</script>
+
+</body>
+</html>
